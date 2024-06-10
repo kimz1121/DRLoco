@@ -1,8 +1,15 @@
+import os
+import random
+import torch
 import gym, wandb
 import numpy as np
 import seaborn as sns
+from matplotlib import animation
+import matplotlib.pyplot as plt
 from os import path, getcwd
 from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv, VecNormalize
+from tqdm import tqdm
+from stable_baselines3.common.env_util import make_vec_env
 
 
 def is_remote():
@@ -15,7 +22,6 @@ def is_remote():
     To detect the remote server, we just check for the scripts absolute path
     which is different on both machines.
     """
-    # return 'code/torch' in path.abspath(getcwd())
     return True
 
 def get_project_path():
@@ -125,6 +131,16 @@ def vec_env(env_id, num_envs=4, seed=33, norm_rew=True,
         env_fncts = [make_env_func(seed, rank) for rank in range(num_envs)]
         vec_env = SubprocVecEnv(env_fncts)
 
+    # def make_env():
+    #     # env = gym.make(env_name)
+    #     env = env_map[env_id]()
+    #     if isinstance(env, MimicEnv):
+    #         # wrap a MimicEnv in the EnvMonitor
+    #         # has to be done before converting into a VecEnv!
+    #         env = EnvMonitor(env)
+    #     return env
+    # vec_env = make_vec_env(make_env, n_envs=num_envs, vec_env_cls=SubprocVecEnv)
+
     # normalize the observations and rewards of the environment
     # if a load_path was specified, load the running mean and std of obs and rets from this path
     if load_path is not None:
@@ -173,7 +189,7 @@ def plot_weight_matrix(weight_matrix, show=True, max_abs_value=1, center_cmap=Tr
     return weight_matrix
 
 
-def save_model(model, path, checkpoint, full=False):
+def save_model(model, path, checkpoint, full=False, verbose=False):
     """
     saves the model, the corresponding environment means and pi weights
     :param full: if True, also save network weights and upload model to wandb
@@ -183,54 +199,10 @@ def save_model(model, path, checkpoint, full=False):
     # save Running mean of observations and reward
     env_path = path + f'envs/env_{checkpoint}'
     model.get_env().save(env_path)
-
-    if full:
-        save_pi_weights(model, checkpoint)
-        # save model and env to wandb
-        wandb.save(model_path)
-        wandb.save(env_path)
-
+    if verbose:
+        tqdm.write(f"Saving model to {model_path}")
+        tqdm.write(f"Saving env to {env_path}")
     return model_path, env_path
-
-
-def save_pi_weights(model, name):
-    """Saves all weights of the policy network
-     @:param name: Info to append to the file's name"""
-    weights = []
-    biases = []
-    attens = []
-
-    # todo: check why it does not work for pretrained models!
-    return
-
-    save_path = None
-    # log('Model Parameters:', model.params)
-
-    for param in model.params:
-        if 'pi' in param.name:
-            if 'w:0' in param.name:
-                weights.append(model.sess.run(param))
-            elif 'b:0' in param.name:
-                biases.append(model.sess.run(param))
-            elif 'att' in param.name:
-                print('Saving attention matrix!')
-                attens.append(model.sess.run(param))
-
-    if len(weights) > 10:
-        # we have a sparse network
-        np.savez(save_path + 'models/params/weights_' + str(name), Ws=weights)
-        np.savez(save_path + 'models/params/biases_' + str(name), bs=biases)
-        print('Saved weights of a sparse network')
-        return
-
-    # save policy network weights
-    np.savez(save_path + 'models/params/weights_' + str(name),
-             W0=weights[0], W1=weights[1], W2=weights[2])
-    np.savez(save_path + 'models/params/biases_' + str(name),
-             b0=biases[0], b1=biases[1], b2=biases[2])
-    if len(attens) > 1:
-        np.savez(save_path + 'models/params/attens_' + str(name),
-                 A0=attens[0], A1=attens[1])
 
 def load_env(checkpoint, save_path, env_id):
     # load a single environment for evaluation
@@ -337,3 +309,63 @@ def resetExponentialRunningSmoothing(label, value=0):
     global _exp_weighted_averages
     _exp_weighted_averages[label] = value
     return True
+
+
+def save_as_gif(frames, path='./', filename='animation.gif'):
+    plt.figure(figsize=(frames[0].shape[1] / 72.0, frames[0].shape[0] / 72.0), dpi=72)
+
+    patch = plt.imshow(frames[0])
+    plt.axis('off')
+
+    def animate(i):
+        patch.set_data(frames[i])
+
+    anim = animation.FuncAnimation(plt.gcf(), animate, frames = len(frames), interval=50)
+    anim.save(path + filename, writer='imagemagick', fps=60)
+
+def set_seed(seed_value, use_cuda=True):
+    np.random.seed(seed_value) # cpu vars
+    torch.manual_seed(seed_value) # cpu  vars
+    random.seed(seed_value) # Python
+    os.environ['PYTHONHASHSEED'] = str(seed_value) # Python hash buildin
+    if use_cuda:
+        torch.cuda.manual_seed(seed_value)
+        torch.cuda.manual_seed_all(seed_value) # gpu vars
+        torch.backends.cudnn.deterministic = True  #needed
+        torch.backends.cudnn.benchmark = False
+
+def encode_gif(frames, fps):
+    from subprocess import PIPE, Popen
+
+    h, w, c = frames[0].shape
+    pxfmt = {1: "gray", 3: "rgb24"}[c]
+    cmd = " ".join(
+        [
+            "ffmpeg -y -f rawvideo -vcodec rawvideo",
+            f"-r {fps:.02f} -s {w}x{h} -pix_fmt {pxfmt} -i - -filter_complex",
+            "[0:v]split[x][z];[z]palettegen[y];[x]fifo[x];[x][y]paletteuse",
+            f"-r {fps:.02f} -f gif -",
+        ]
+    )
+    proc = Popen(cmd.split(" "), stdin=PIPE, stdout=PIPE, stderr=PIPE)
+    for image in frames:
+        proc.stdin.write(image.tostring())
+    out, err = proc.communicate()
+    if proc.returncode:
+        raise IOError("\n".join([" ".join(cmd), err.decode("utf8")]))
+    del proc
+    return out
+
+
+def write_gif_to_disk(frames, filename, fps=10):
+    """
+    frame: np.array of shape TxHxWxC
+    """
+    try:
+        frames = encode_gif(frames, fps)
+        with open(filename, "wb") as f:
+            f.write(frames)
+        tqdm.write(f"GIF saved to {filename}")
+    except Exception as e:
+        tqdm.write(frames.shape)
+        tqdm.write("GIF Saving failed.", e)
