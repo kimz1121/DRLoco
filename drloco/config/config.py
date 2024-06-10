@@ -7,7 +7,7 @@ DEBUG = False
 # when debugging, stop training early after a few steps
 MAX_DEBUG_STEPS = int(2e4)
 # determine if PyTorch should use CPU or GPU
-USE_CPU = True
+USE_CPU = False
 
 # -----------------------------
 # Simulation Environment
@@ -15,7 +15,7 @@ USE_CPU = True
 
 # specify the environment you want to use
 # the IDs of all available environments are listed in mujoco/config.py
-ENV_ID = 'StraightMimicWalker' # 'MimicWalker165cm65kg' #
+ENV_ID = 'MimicWalker165cm65kg' # 'MimicWalker165cm65kg' #
 # specify control frequency in Hz (policy queries per second)
 CTRL_FREQ = {'StraightMimicWalker': 200,
              'MimicWalker165cm65kg': 100}[ENV_ID]

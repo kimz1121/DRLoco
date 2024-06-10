@@ -20,7 +20,8 @@ MOD_CLIPRANGE_SCHED = 'clip_sched'
 MOD_MIRR_POLICY = 'mirr_py'
 
 # specify modifications to the baseline algorithm, e.g. mirroring policy
-modifications_list = [MOD_CUSTOM_POLICY, MOD_MIRR_POLICY]
+# modifications_list = [MOD_CUSTOM_POLICY, MOD_MIRR_POLICY]
+modifications_list = [MOD_CUSTOM_POLICY]
 modification = '/'.join(modifications_list)
 
 def is_mod(mod_str):
@@ -90,7 +91,8 @@ lr_scale = 1
 mio_samples = 8
 
 # how many parallel environments should be used to collect samples
-n_envs = 8 if utils.is_remote() and not cfg.DEBUG else 1
+# n_envs = 12 if utils.is_remote() and not cfg.DEBUG else 1
+n_envs = 12 if utils.is_remote() and not cfg.DEBUG else 1
 
 # Neural Network hidden layer sizes
 # and the corresponding activation functions
