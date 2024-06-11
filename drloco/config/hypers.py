@@ -53,10 +53,10 @@ rew_scale = 1
 
 # alive bonus is provided as reward for each step
 # the agent hasn't entered a terminal state
-alive_bonus = 0.2 * rew_scale
+alive_bonus = 0.3 * rew_scale
 
 # Early Termination: maximum steps in the environment per episode
-ep_dur_max = 3000
+ep_dur_max = 5000
 
 # ---------------------------------------------------
 # (PPO) HYPERPARAMETERS
@@ -88,7 +88,7 @@ lr_final = 1 * (1e-6)
 lr_scale = 1
 
 # number of experiences to collect [in Millions]
-mio_samples = 8
+mio_samples = 20
 
 # how many parallel environments should be used to collect samples
 # n_envs = 12 if utils.is_remote() and not cfg.DEBUG else 1
