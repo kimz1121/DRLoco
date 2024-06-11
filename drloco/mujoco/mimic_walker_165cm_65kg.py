@@ -36,9 +36,16 @@ class MimicWalker165cm65kgEnv(MimicEnv):
     # ----------------------------
     # Methods we override:
     # ----------------------------
+    def get_reward(self, done: bool):
+        """ Returns the reward of the current state.
+            :param done: is True, when episode finishes and else False"""
+        return self._get_ET_reward() if done \
+            else self.get_imitation_reward() + cfg.alive_bonus
+
+
     def _get_ET_reward(self):
         """ Punish falling hard and reward reaching episode's end a lot. """
-        print("test_reward")
+
         # calculate a running mean of the ep_return
         self.mean_epret_smoothed = smooth('mimic_env_epret', np.sum(self.ep_rews), 0.5)
         self.ep_rews = []
@@ -53,7 +60,7 @@ class MimicWalker165cm65kgEnv(MimicEnv):
             reward = act_ret_est
         # punish for ending the episode early
         else:
-            reward = -10
+            reward = -1 * self.mean_epret_smoothed
 
         return reward
     
