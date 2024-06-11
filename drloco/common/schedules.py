@@ -76,24 +76,27 @@ class CosSchedule(Schedule):
         return val
 
 class CosDecaySchedule(Schedule):
-    def __init__(self, start_value, final_value, num_of_period):
+    def __init__(self, start_value, final_value, num_of_period, wavelength):
         self.start = start_value
         self.end = final_value
         self.total_time = 1
         self.num_of_period = num_of_period
-        self.wavelength = self.total_time / self.num_of_period
-        self.slope = lr_scale * (final_value - start_value)
+        self.wavelength = wavelength
+        self.slope = lr_scale * (start_value - final_value)
 
     def cos_annealing_wave(self, x):
-        theta = 2*math.pi*(x/self.wavelength)
-        val = (0.5 + 0.5*math.cos(theta % math.pi))
-        return val    
+        period = x/self.wavelength
+        if period <= self.num_of_period:
+            theta = math.pi*period
+            val = 0.5*(1 + math.cos(theta % math.pi))
+        else:
+            val = 0
+        return val
     
     def value(self, fraction_timesteps_left):
         fraction_passed = 1 - fraction_timesteps_left
         decay = fraction_timesteps_left
-        val = decay*self.slope*self.cos_annealing_wave(fraction_passed)+ self.end
-                
+        val = decay*self.slope*self.cos_annealing_wave(fraction_passed) + self.end
         # value should not be smaller then the minimum specified
         val = np.max([val, self.end])
         return val

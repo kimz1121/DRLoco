@@ -15,7 +15,7 @@ import torch as th
 from drloco.config import config as cfgl
 from drloco.config import hypers as cfg
 from drloco.common import utils
-from drloco.common.schedules import LinearDecay, ExponentialSchedule
+from drloco.common.schedules import LinearDecay, ExponentialSchedule, CosSchedule, CosDecaySchedule
 from drloco.common.callback import TrainingMonitor
 from drloco.common.callback import SaveVideoCallback
 
@@ -96,12 +96,18 @@ def train(args):
     lr_start = cfg.lr_start
     lr_end = cfg.lr_final
 
-    learning_rate_schedule = LinearDecay(lr_start, lr_end).value
+    # learning_rate_schedule = LinearDecay(lr_start, lr_end).value
+    period_wave_num = cfg.lr_period_wave_num
+    period_wave_len = cfg.lr_period_wave_len_mio / cfg.mio_samples
+    learning_rate_schedule = CosDecaySchedule(lr_start, lr_end, period_wave_num, period_wave_len).value
+    
     if cfg.is_mod(cfg.MOD_CLIPRANGE_SCHED):
         clip_schedule = ExponentialSchedule(cfg.clip_start, cfg.clip_end, cfg.clip_exp_slope)
         clip_range = clip_schedule.value
+        print("test1")
     else:
         clip_range = cfg.cliprange
+        print("test2")
 
     use_custom_policy = cfg.is_mod(cfg.MOD_CUSTOM_POLICY)
     policy_kwargs = {'log_std_init':cfg.init_logstd} if use_custom_policy else \

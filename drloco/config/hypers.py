@@ -53,7 +53,7 @@ rew_scale = 1
 
 # alive bonus is provided as reward for each step
 # the agent hasn't entered a terminal state
-alive_bonus = 0.3 * rew_scale
+alive_bonus = 0.5 * rew_scale
 
 # Early Termination: maximum steps in the environment per episode
 ep_dur_max = 5000
@@ -86,6 +86,8 @@ batch_size = (4096 * 4) if not cfg.DEBUG else 2 * minibatch_size
 lr_start = 500 * (1e-6)
 lr_final = 1 * (1e-6)
 lr_scale = 1
+lr_period_wave_num = 18 # when only using cos scheduling
+lr_period_wave_len_mio = 3 # [in Millions] when only using cos scheduling
 
 # number of experiences to collect [in Millions]
 mio_samples = 20
