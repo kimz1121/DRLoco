@@ -367,5 +367,5 @@ def write_gif_to_disk(frames, filename, fps=10):
             f.write(frames)
         tqdm.write(f"GIF saved to {filename}")
     except Exception as e:
-        tqdm.write(frames.shape)
-        tqdm.write("GIF Saving failed.", e)
+        tqdm.write(str(frames.shape))
+        tqdm.write("GIF Saving failed." + str(e))
