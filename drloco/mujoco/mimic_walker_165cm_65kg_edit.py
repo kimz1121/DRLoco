@@ -53,7 +53,7 @@ class MimicWalker165cm65kgEnv(MimicEnv):
             reward = act_ret_est
         # punish for ending the episode early
         else:
-            reward = -1
+            reward = -10
 
         return reward
     

@@ -1,10 +1,4 @@
-import numpy as np
-
-from drloco.config import config as cfgl
-from drloco.config import hypers as cfg
 from drloco.common.utils import get_project_path
-from drloco.common.utils import exponential_running_smoothing as smooth
-
 from drloco.mujoco.mimic_env import MimicEnv
 import drloco.ref_trajecs.loco3d_trajecs as refs
 
@@ -36,27 +30,7 @@ class MimicWalker165cm65kgEnv(MimicEnv):
     # ----------------------------
     # Methods we override:
     # ----------------------------
-    def _get_ET_reward(self):
-        """ Punish falling hard and reward reaching episode's end a lot. """
-        print("test_reward")
-        # calculate a running mean of the ep_return
-        self.mean_epret_smoothed = smooth('mimic_env_epret', np.sum(self.ep_rews), 0.5)
-        self.ep_rews = []
 
-        # reward reaching the end of the episode without falling
-        # reward = expected cumulative future reward
-        max_eplen_reached = self.ep_dur >= cfg.ep_dur_max
-        if max_eplen_reached:
-            # estimate future cumulative reward expecting getting the mean reward per step
-            mean_step_rew = self.mean_epret_smoothed / self.ep_dur
-            act_ret_est = np.sum(mean_step_rew * np.power(cfg.gamma, np.arange(self.ep_dur)))
-            reward = act_ret_est
-        # punish for ending the episode early
-        else:
-            reward = -10
-
-        return reward
-    
     def _get_COM_indices(self):
         return [0,1,2]
 
