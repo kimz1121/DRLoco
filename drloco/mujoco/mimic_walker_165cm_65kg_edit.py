@@ -4,6 +4,10 @@ from drloco.config import config as cfgl
 from drloco.config import hypers as cfg
 from drloco.common.utils import get_project_path
 from drloco.common.utils import exponential_running_smoothing as smooth
+from drloco.common.utils import log
+from drloco.common.utils import is_remote
+
+from mujoco_py.builder import MujocoException
 
 from drloco.mujoco.mimic_env import MimicEnv
 import drloco.ref_trajecs.loco3d_trajecs as refs
@@ -36,6 +40,81 @@ class MimicWalker165cm65kgEnv(MimicEnv):
     # ----------------------------
     # Methods we override:
     # ----------------------------
+    def step(self, action):
+        # when rendering: pause sim on startup to change rendering speed, camera perspective etc.
+        # todo: make it a constant in the config file or a constant in the mimicEnv here.
+        pause_mujoco_viewer_on_start = True and not is_remote()
+        if pause_mujoco_viewer_on_start:
+            self._get_viewer('human')._paused = True
+            pause_mujoco_viewer_on_start = False
+
+        # todo: the base class should have a method
+        #  called modify_actions or preprocess actions instead of this?
+        #  otherwise document, that we're rescaling actions
+        #  and add action ranges into the environment (get_action_ranges())
+        action = self._rescale_actions(action)
+
+        # todo: remove that after you've made sure, the simple env works as before
+        # todo: Add a static method to each environment
+        #  that allows to mirror the experiences (s,a,r,s')
+        # when we're mirroring the policy (phase based mirroring), mirror the action
+        if cfg.is_mod(cfg.MOD_MIRR_POLICY) and self.refs.is_step_left():
+            action = self.mirror_action(action)
+
+        # execute simulation with desired action for multiple steps
+        try:
+            self.do_simulation(action, self._frame_skip)
+            # self.render()
+        # If a MuJoCo Exception is raised, catch it and reset the environment
+        except MujocoException as mex:
+            log('MuJoCo Exception catched!',
+                [f'- Episode Duration: {self.ep_dur}',
+                 f'Exception: \n {mex}'])
+            obs = self.reset()
+            return obs, 0, True, {}
+
+
+
+        # increment the current position on the reference trajectories
+        self.refs.next()
+
+        # get state observation after simulation step
+        obs = self._get_obs()
+
+        # workaround due to MujocoEnv calling step() during __init__()
+        if not self.finished_init:
+            return obs, 3.33, False, {}
+
+        # increment episode duration
+        self.ep_dur += 1
+
+        # update the so far traveled distance
+        self.update_walked_distance()
+
+        # todo: add a function is_done() that can be overwritten
+        # check if we entered a terminal state
+        com_z_pos = self.get_COM_Z_position()
+        # was max episode duration or max walking distance reached?
+
+        max_eplen_reached = self.ep_dur >= cfg.ep_dur_max
+
+        # terminate the episode?
+        # todo: should be is_done() or self.ep_dur >= cfg.ep_dur_max
+        done = com_z_pos < 0.5 or max_eplen_reached
+
+        # todo: do we need this necessarily in the simple straight walking case?
+        # terminate_early, _, _, _ = self.do_terminate_early()
+        reward = self.get_reward(done)
+
+        return obs, reward, done, {}
+    
+    def get_reward(self, done: bool):
+        """ Returns the reward of the current state.
+            :param done: is True, when episode finishes and else False"""
+        return self._get_ET_reward() if done \
+            else self.get_imitation_reward() + cfg.alive_bonus
+
+
     def _get_ET_reward(self):
         """ Punish falling hard and reward reaching episode's end a lot. """
 
@@ -53,7 +132,7 @@ class MimicWalker165cm65kgEnv(MimicEnv):
             reward = act_ret_est
         # punish for ending the episode early
         else:
-            reward = -10
+            reward = -1 * self.mean_epret_smoothed
 
         return reward
     
