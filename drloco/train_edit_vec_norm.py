@@ -3,6 +3,7 @@ import sys
 from os import getcwd
 sys.path.append(getcwd())
 sys.path.append('/home/lab6/robot_learn/DRLoco')
+sys.path.append('/home/kimz1121/robot_learn/DRLoco')
 
 # import required modules
 import argparse
