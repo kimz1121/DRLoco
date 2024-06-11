@@ -105,6 +105,7 @@ class MimicWalker165cm65kgEnv(MimicEnv):
         # todo: do we need this necessarily in the simple straight walking case?
         # terminate_early, _, _, _ = self.do_terminate_early()
         reward = self.get_reward(done)
+        self.ep_rews.append(reward)
 
         return obs, reward, done, {}
     
