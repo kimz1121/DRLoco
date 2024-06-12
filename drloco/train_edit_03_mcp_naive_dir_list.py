@@ -92,9 +92,8 @@ def train(args):
     }
     env_kwargs = {
         # "direction": env_direction[direction],
-        "direction_list": env_direction[0:4],
-        "direction_range": [0, 360]
-        
+        "direction_list": [env_direction[direction] for direction in range(4)],
+        # "direction_range": [0, 360]
     }
     if "Ant" in cfgl.ENV_ID:
         env = make_vec_env(
