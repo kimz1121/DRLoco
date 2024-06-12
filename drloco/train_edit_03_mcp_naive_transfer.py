@@ -126,10 +126,18 @@ def train(args):
     period_wave_len = cfg.lr_period_wave_len_mio / cfg.mio_samples
     learning_rate_schedule = CosDecaySchedule(lr_start, lr_end, period_wave_num, period_wave_len).value
 
+    direction = 0
+    env_direction = {
+        0: 0,
+        1: 180,
+        2: 90,
+        3: 270,
+    }
+
     learn_log_std = False
     num_primitives = 8
-    use_mcp_ppo_args = True
-    big_model = False
+    use_mcp_ppo_args = False
+    big_model = True
 
     policy_kwargs = {
     "state_dim": env.observation_space.shape[0] - 2,
