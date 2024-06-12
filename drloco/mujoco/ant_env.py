@@ -39,7 +39,8 @@ class DirAntEnv(mujoco_env.MujocoEnv, utils.EzPickle):
         survive_reward = 1.0
         reward = forward_reward - ctrl_cost - contact_cost + survive_reward
         state = self.state_vector()
-        notdone = np.isfinite(state).all() and state[2] >= 0.2 and state[2] <= 1.0 and self.get_body_com("torso")[2] > 0.25
+        notdone = np.isfinite(state).all() and state[2] >= 0.2 and state[2] <= 1.0 and self.get_body_com("torso")[2] > 0.3
+        # print("torso : {:0.3f}, {:0.3f}, {:0.3f}".format(self.get_body_com("torso")[0], self.get_body_com("torso")[1], self.get_body_com("torso")[2]))
         done = not notdone
         ob = self._get_obs()
         return (
@@ -74,6 +75,8 @@ class DirAntEnv(mujoco_env.MujocoEnv, utils.EzPickle):
     def viewer_setup(self):
         self.viewer.cam.distance = self.model.stat.extent * 0.5
 
+    def get_COM_Z_position(self):
+        return self.sim.data.qpos[self._get_COM_indices()[-1]]
 
 class GoalAnt(DirAntEnv):
     def __init__(self, direction=0):
