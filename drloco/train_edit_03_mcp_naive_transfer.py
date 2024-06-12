@@ -227,7 +227,12 @@ def train(args):
     callbackList = CallbackList(callback_input_array)
 
     # train model
-    
+    model_path = f"logs/NewRandomGoalAnt-v2/PPO_{run_id}/seed0/final.zip"
+    assert os.path.exists(model_path)
+    mcp_model = PPO.load(model_path, env, verbose=1, tensorboard_log=tbdir, seed=seed)
+
+    mcp_model.policy.freeze_primitives()
+
     model.learn(total_timesteps=training_timesteps, callback=callbackList)
 
     # save model after training
