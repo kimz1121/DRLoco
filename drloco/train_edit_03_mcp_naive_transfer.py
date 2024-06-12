@@ -149,7 +149,7 @@ def train(args):
 
     if use_mcp_ppo_args:
         ppo_kwargs = {
-            "learning_rate": 2e-5,
+            "learning_rate": 2e-4,
             "n_steps": 4096,
             "batch_size": 256,
             "gamma": 0.95,

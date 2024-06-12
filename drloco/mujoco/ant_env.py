@@ -37,7 +37,8 @@ class DirAntEnv(mujoco_env.MujocoEnv, utils.EzPickle):
             0.5 * 1e-3 * np.sum(np.square(np.clip(self.sim.data.cfrc_ext, -1, 1)))
         )
         survive_reward = 1.0
-        reward = forward_reward - ctrl_cost - contact_cost + survive_reward
+        weight = [0.6, 0.1, 0.2, 0.1]
+        reward = weight[0]*forward_reward - weight[1]*ctrl_cost - weight[2]*contact_cost + weight[3]*survive_reward
         state = self.state_vector()
         notdone = np.isfinite(state).all() and state[2] >= 0.2 and state[2] <= 1.0 and self.get_body_com("torso")[2] > 0.3
         # print("torso : {:0.3f}, {:0.3f}, {:0.3f}".format(self.get_body_com("torso")[0], self.get_body_com("torso")[1], self.get_body_com("torso")[2]))
