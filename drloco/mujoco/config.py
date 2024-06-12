@@ -5,8 +5,8 @@ from drloco.mujoco.ant_env import GoalAnt, RandomGoalAnt
 # specify environment ids
 straight_walker = 'StraightMimicWalker'
 hip3d_2seg_upper_body_walker = 'MimicWalker165cm65kg'
-ant_dir_goal = 'AntDirGoal'
-ant_dir_random_goal = 'AntDirRandomGoal'
+ant_dir_goal = 'NewGoalAnt-v2'
+ant_dir_random_goal = 'NewRandomGoalAnt-v2'
 
 # map environment ids to the corresponding classes
 env_map = {straight_walker: MimicWalker3dEnv,

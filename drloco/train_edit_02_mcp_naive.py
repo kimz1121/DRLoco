@@ -13,6 +13,7 @@ import wandb
 
 import torch as th
 
+
 from drloco.config import config as cfgl
 from drloco.config import hypers as cfg
 from drloco.common import utils
@@ -24,10 +25,12 @@ from stable_baselines3 import PPO
 from stable_baselines3.ppo.policies import MlpPolicy
 from stable_baselines3.common.callbacks import CallbackList, CheckpointCallback
 from stable_baselines3.common.vec_env import VecCheckNan, VecNormalize
+from stable_baselines3.common.env_util import make_vec_env
+
 from drloco.custom.policies import CustomActorCriticPolicy
 from drloco.custom.policies_mcp import MCPNaive, MPPO
 
-
+import drloco.mujoco.ant_env
 
 
 # determine the name of saved models before (init) and after training (final)
@@ -80,8 +83,24 @@ def train(args):
         os.makedirs(mon_dir, exist_ok=True)
 
     # setup environment
-    env = utils.vec_env(cfgl.ENV_ID, norm_rew=True, num_envs=cfg.n_envs)
-    
+    direction = 0
+    env_direction = {
+        0: 0,
+        1: 180,
+        2: 90,
+        3: 270,
+    }
+    env_kwargs = {
+        # "direction": env_direction[direction],
+        "direction_range": [0, 360]
+    }
+    if "Ant" in cfgl.ENV_ID:
+        env = make_vec_env(
+            cfgl.ENV_ID, n_envs=cfg.n_envs, monitor_dir=mon_dir, env_kwargs=env_kwargs, seed=seed
+        )
+    else:
+        env = utils.vec_env(cfgl.ENV_ID, norm_rew=True, num_envs=cfg.n_envs)
+
     if vec_normalise:
         if os.path.exists(os.path.join(log_dir, "vec_normalize.pkl")):
             print("Found VecNormalize Stats. Using stats")
@@ -102,34 +121,49 @@ def train(args):
     period_wave_num = cfg.lr_period_wave_num
     period_wave_len = cfg.lr_period_wave_len_mio / cfg.mio_samples
     learning_rate_schedule = CosDecaySchedule(lr_start, lr_end, period_wave_num, period_wave_len).value
-    
-    if cfg.is_mod(cfg.MOD_CLIPRANGE_SCHED):
-        clip_schedule = ExponentialSchedule(cfg.clip_start, cfg.clip_end, cfg.clip_exp_slope)
-        clip_range = clip_schedule.value
-        print("test1")
+
+    direction = 0
+    env_direction = {
+        0: 0,
+        1: 180,
+        2: 90,
+        3: 270,
+    }
+
+    learn_log_std = False
+    num_primitives = 8
+    use_mcp_ppo_args = False
+    big_model = True
+
+    policy_kwargs = {
+    "state_dim": env.observation_space.shape[0] - 2,
+    "goal_dim": 2,
+    "num_primitives": num_primitives,
+    "learn_log_std": learn_log_std,
+    "big_model": big_model,
+    }
+
+    if use_mcp_ppo_args:
+        ppo_kwargs = {
+            "learning_rate": 2e-5,
+            "n_steps": 4096,
+            "batch_size": 256,
+            "gamma": 0.95,
+            "gae_lambda": 0.95,
+            "clip_range": 0.02,
+        }
     else:
-        clip_range = cfg.cliprange
-        print("test2")
+        ppo_kwargs = {}
 
-    use_custom_policy = cfg.is_mod(cfg.MOD_CUSTOM_POLICY)
-    print("use_custom_policy : {}".format(use_custom_policy))
-    policy_kwargs = {'log_std_init':cfg.init_logstd} if use_custom_policy else \
-                    {'net_arch': [{'vf': cfg.hid_layer_sizes, 'pi': cfg.hid_layer_sizes}],
-                    'activation_fn': th.nn.Tanh, 'log_std_init':cfg.init_logstd}
-
-    model = PPO(MCPNaive if use_custom_policy else MlpPolicy,
-                       env, verbose=1,
-                       n_steps = cfg.batch_size//cfg.n_envs, # num of steps per env per update
-                       batch_size=cfg.minibatch_size, # minibatch size (batch size per training step)
-                       policy_kwargs=policy_kwargs,
-                       learning_rate=learning_rate_schedule, 
-                       ent_coef=cfg.ent_coef,
-                       gamma=cfg.gamma, 
-                       n_epochs=cfg.noptepochs,
-                       clip_range_vf=clip_range, 
-                       clip_range=clip_range,
-                       tensorboard_log=tbdir)
-
+    model = PPO(
+        MCPNaive,
+        env,
+        verbose=1,
+        policy_kwargs=policy_kwargs,
+        tensorboard_log=tbdir,
+        seed=seed,
+        **ppo_kwargs,
+    )
 
     # print model path and modification parameters
     # utils.log('RUN DESCRIPTION: \n' + cfgl.WB_RUN_DESCRIPTION)
