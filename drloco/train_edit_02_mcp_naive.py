@@ -92,9 +92,7 @@ def train(args):
     }
     env_kwargs = {
         # "direction": env_direction[direction],
-        "direction_list": env_direction[0:4],
         "direction_range": [0, 360]
-        
     }
     if "Ant" in cfgl.ENV_ID:
         env = make_vec_env(
@@ -203,7 +201,7 @@ def train(args):
                 imgs = np.array(imgs)
 
                 if self.save_path is not None:
-                    fname=os.path.join(self.save_path, "eval_video_{:0>5}.gif".format(self.n_calls // self.eval_freq))
+                    fname=os.path.join(self.save_path, "eval_video_{:0>5}_deg_{:0>3}.gif".format(self.n_calls // self.eval_freq, eval_env.envs[0].direction))
                     fps = 30 if ep_len < 200 else 60
                     utils.write_gif_to_disk(imgs, fname, fps)
 

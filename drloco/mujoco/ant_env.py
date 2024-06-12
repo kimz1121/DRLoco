@@ -110,6 +110,7 @@ class RandomGoalAnt(DirAntEnv):
                 direction = np.random.randint(self.direction_range[0], self.direction_range[1])
             elif self.direction_list is not None:
                 direction = np.random.choice(self.direction_list)
+        
         self.set_direction(direction)
         obs = super().reset()
         return self.add_goal(obs)
