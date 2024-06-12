@@ -15,10 +15,13 @@ USE_CPU = False
 
 # specify the environment you want to use
 # the IDs of all available environments are listed in mujoco/config.py
-ENV_ID = 'MimicWalker165cm65kg' # 'MimicWalker165cm65kg' #
+ENV_ID = 'AntDirRandomGoal'
 # specify control frequency in Hz (policy queries per second)
 CTRL_FREQ = {'StraightMimicWalker': 200,
-             'MimicWalker165cm65kg': 100}[ENV_ID]
+             'MimicWalker165cm65kg': 100,
+             'AntDirGoal': 100,
+             'AntDirRandomGoal': 100
+             }[ENV_ID]
 # number of episodes per model evaluation
 EVAL_N_TIMES = 20
 # minimum distance [m] to walk to label the gait as stable
