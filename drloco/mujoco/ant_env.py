@@ -45,10 +45,10 @@ class DirAntEnv(mujoco_env.MujocoEnv, utils.EzPickle):
         notdone = np.isfinite(state).all() and is_healthy
         # print("torso : {:0.3f}, {:0.3f}, {:0.3f}".format(self.get_body_com("torso")[0], self.get_body_com("torso")[1], self.get_body_com("torso")[2]))
         done = not notdone
-        punish_not_healthy = 1.0
+        punish_not_healthy = 10.0
         if(done == True):
             if(is_healthy == False):
-                reward = reward - punish_not_healthy
+                reward = - punish_not_healthy
         
         ob = self._get_obs()
         return (
