@@ -40,9 +40,16 @@ class DirAntEnv(mujoco_env.MujocoEnv, utils.EzPickle):
         weight = [0.8, 0.025, 0.15, 0.025]
         reward = weight[0]*forward_reward - weight[1]*ctrl_cost - weight[2]*contact_cost + weight[3]*survive_reward
         state = self.state_vector()
-        notdone = np.isfinite(state).all() and state[2] >= 0.2 and state[2] <= 1.0 and self.get_body_com("torso")[2] > 0.3
+
+        is_healthy = self.get_body_com("torso")[2] > 0.3 and self.get_body_com("torso")[2] < 1.0
+        notdone = np.isfinite(state).all() and is_healthy
         # print("torso : {:0.3f}, {:0.3f}, {:0.3f}".format(self.get_body_com("torso")[0], self.get_body_com("torso")[1], self.get_body_com("torso")[2]))
         done = not notdone
+        punish_not_healthy = 1.0
+        if(done == True):
+            if(is_healthy == False):
+                reward = reward - punish_not_healthy
+        
         ob = self._get_obs()
         return (
             ob,
@@ -110,7 +117,7 @@ class RandomGoalAnt(DirAntEnv):
                 direction = np.random.randint(self.direction_range[0], self.direction_range[1])
             elif self.direction_list is not None:
                 direction = np.random.choice(self.direction_list)
-        
+
         self.set_direction(direction)
         obs = super().reset()
         return self.add_goal(obs)
