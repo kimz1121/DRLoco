@@ -260,7 +260,7 @@ if __name__ == '__main__':
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--vec_normalise", type=str, default="False")
     parser.add_argument("--checkpoint_freq", type=int, default="250000")
-    parser.add_argument("--eval_freq", type=int, default="100000")
+    parser.add_argument("--eval_freq", type=int, default="1000000")
     parser.add_argument("--save_video", type=str, default="True")
     args = parser.parse_args()
 
