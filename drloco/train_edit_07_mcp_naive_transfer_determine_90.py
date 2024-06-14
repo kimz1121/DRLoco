@@ -126,18 +126,10 @@ def train(args):
     period_wave_len = cfg.lr_period_wave_len_mio / cfg.mio_samples
     learning_rate_schedule = CosDecaySchedule(lr_start, lr_end, period_wave_num, period_wave_len).value
 
-    direction = 0
-    env_direction = {
-        0: 0,
-        1: 180,
-        2: 90,
-        3: 270,
-    }
-
     learn_log_std = False
     num_primitives = 8
-    use_mcp_ppo_args = False
-    big_model = True
+    use_mcp_ppo_args = True
+    big_model = False
 
     policy_kwargs = {
     "state_dim": env.observation_space.shape[0] - 2,
@@ -192,6 +184,7 @@ def train(args):
         def _on_step(self) -> bool:
             if self.n_calls % self.eval_freq == 0:
                 obs = self.eval_env.reset()
+                eval_direction = eval_env.envs[0].direction
                 img = self.eval_env.render("rgb_array")
                 imgs = [img]
                 done = False
@@ -209,7 +202,7 @@ def train(args):
                 imgs = np.array(imgs)
 
                 if self.save_path is not None:
-                    fname=os.path.join(self.save_path, "eval_video_{:0>5}.gif".format(self.n_calls // self.eval_freq))
+                    fname=os.path.join(self.save_path, "eval_video_{:0>5}_deg_{:0>3}.gif".format(self.n_calls // self.eval_freq, eval_direction))
                     fps = 30 if ep_len < 200 else 60
                     utils.write_gif_to_disk(imgs, fname, fps)
 
