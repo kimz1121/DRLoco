@@ -94,7 +94,7 @@ mio_samples = 20
 
 # how many parallel environments should be used to collect samples
 # n_envs = 12 if utils.is_remote() and not cfg.DEBUG else 1
-n_envs = 16 if utils.is_remote() and not cfg.DEBUG else 1
+n_envs = 20 if utils.is_remote() and not cfg.DEBUG else 1
 
 # Neural Network hidden layer sizes
 # and the corresponding activation functions

@@ -7,7 +7,7 @@ DEBUG = False
 # when debugging, stop training early after a few steps
 MAX_DEBUG_STEPS = int(2e4)
 # determine if PyTorch should use CPU or GPU
-USE_CPU = False
+USE_CPU = True
 
 # -----------------------------
 # Simulation Environment
@@ -15,10 +15,13 @@ USE_CPU = False
 
 # specify the environment you want to use
 # the IDs of all available environments are listed in mujoco/config.py
-ENV_ID = 'MimicWalker165cm65kg' # 'MimicWalker165cm65kg' #
+ENV_ID = 'NewRandomGoalAnt-v2'
 # specify control frequency in Hz (policy queries per second)
 CTRL_FREQ = {'StraightMimicWalker': 200,
-             'MimicWalker165cm65kg': 100}[ENV_ID]
+             'MimicWalker165cm65kg': 100,
+             'NewGoalAnt-v2': 100,
+             'NewRandomGoalAnt-v2': 100
+             }[ENV_ID]
 # number of episodes per model evaluation
 EVAL_N_TIMES = 20
 # minimum distance [m] to walk to label the gait as stable
