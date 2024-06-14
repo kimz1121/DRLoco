@@ -86,7 +86,7 @@ def train(args):
         os.makedirs(mon_dir, exist_ok=True)
 
     # setup environment
-    direction = 0
+    # direction = 0
     env_direction = {
         0: 0,
         1: 180,
@@ -94,8 +94,9 @@ def train(args):
         3: 270,
     }
     env_kwargs = {
-        # "direction": env_direction[direction],
-        "direction_range": [0, 360]
+        "direction": 0,
+        "direction_range": None,
+        "direction_list": [direction]
     }
     if "Ant" in cfgl.ENV_ID:
         env = make_vec_env(
