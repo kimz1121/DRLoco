@@ -90,7 +90,7 @@ lr_period_wave_num = 18 # when only using cos scheduling
 lr_period_wave_len_mio = 3 # [in Millions] when only using cos scheduling
 
 # number of experiences to collect [in Millions]
-mio_samples = 50
+mio_samples = 20
 
 # how many parallel environments should be used to collect samples
 # n_envs = 12 if utils.is_remote() and not cfg.DEBUG else 1

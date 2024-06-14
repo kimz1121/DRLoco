@@ -87,6 +87,10 @@ def train(args):
 
     # setup environment
     # direction = 0
+    if (not direction is None):
+        assert not direction is None 
+        "please input direction"
+    
     env_direction = {
         0: 0,
         1: 180,
@@ -248,14 +252,14 @@ def train(args):
 if __name__ == '__main__':
     # argument
     parser = argparse.ArgumentParser()
-    parser.add_argument("--direction", type=int, default=0)
+    parser.add_argument("--direction", type=int)
     parser.add_argument("--id", type=str, default="baseline")
     parser.add_argument("--algo", type=str, default="PPO")
     parser.add_argument("--logdir_primitive", type=str, default="logs")
     parser.add_argument("--logdir_transfer", type=str, default="logs_transfer")
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--vec_normalise", type=str, default="False")
-    parser.add_argument("--checkpoint_freq", type=int, default="500000")
+    parser.add_argument("--checkpoint_freq", type=int, default="250000")
     parser.add_argument("--eval_freq", type=int, default="100000")
     parser.add_argument("--save_video", type=str, default="True")
     args = parser.parse_args()
