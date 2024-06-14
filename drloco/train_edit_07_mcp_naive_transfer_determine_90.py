@@ -58,7 +58,8 @@ def train(args):
     run_id = args.id
     direction = args.direction
     algo = args.algo
-    logdir = args.logdir
+    logdir_primtive = args.logdir_primtive
+    logdir_transfer = args.logdir_transfer
     seed = args.seed
     vec_normalise = args.vec_normalise == "True" or args.vec_normalise == "true"
     checkpoint_freq = args.checkpoint_freq
@@ -66,19 +67,20 @@ def train(args):
     save_video = args.save_video == "True" or args.save_video == "true"
 
     tag_name = os.path.join(f"{cfgl.ENV_ID}", f"{algo}_{run_id}")
-    log_dir = os.path.join(logdir, tag_name, f"seed{str(seed)}")
-    model_dir = os.path.join(log_dir, "models")
-    mon_dir = os.path.join(log_dir, "gym")
-    tbdir = os.path.join(log_dir, "tb_logs")
+    log_dir_primtive = os.path.join(logdir_primtive, tag_name, f"seed{str(seed)}")
+    log_dir_transfer = os.path.join(logdir_transfer, tag_name, f"seed{str(seed)}")
+    model_dir = os.path.join(log_dir_transfer, "models")
+    mon_dir = os.path.join(log_dir_transfer, "gym")
+    tbdir = os.path.join(log_dir_transfer, "tb_logs")
 
-    checkpoint_dir = os.path.join(log_dir, "checkpint")
+    checkpoint_dir = os.path.join(log_dir_transfer, "checkpint")
 
     # make torch using the CPU instead of the GPU
     if cfgl.USE_CPU: use_cpu()
 
     # create model directories
-    if not os.path.exists(log_dir):
-        os.makedirs(log_dir, exist_ok=True)
+    if not os.path.exists(log_dir_transfer):
+        os.makedirs(log_dir_transfer, exist_ok=True)
         os.makedirs(model_dir, exist_ok=True)
         os.makedirs(mon_dir, exist_ok=True)
 
@@ -106,9 +108,9 @@ def train(args):
         eval_env = utils.vec_env(cfgl.ENV_ID, norm_rew=True, num_envs=1)
 
     if vec_normalise:
-        if os.path.exists(os.path.join(log_dir, "vec_normalize.pkl")):
+        if os.path.exists(os.path.join(log_dir_primtive, "vec_normalize.pkl")):
             print("Found VecNormalize Stats. Using stats")
-            env = VecNormalize.load(os.path.join(log_dir, "vec_normalize.pkl"), env)
+            env = VecNormalize.load(os.path.join(log_dir_primtive, "vec_normalize.pkl"), env)
         else:
             print("No previous stats found. Using new VecNormalize instance.")
             env = VecNormalize(env)
@@ -220,7 +222,7 @@ def train(args):
     callbackList = CallbackList(callback_input_array)
 
     # train model
-    model_path = f"logs/NewRandomGoalAnt-v2/PPO_{run_id}/seed0/final.zip"
+    model_path = f"{log_dir_primtive}/final.zip"
     assert os.path.exists(model_path)
     mcp_model = PPO.load(model_path, env, verbose=1, tensorboard_log=tbdir, seed=seed)
 
@@ -247,7 +249,8 @@ if __name__ == '__main__':
     parser.add_argument("--direction", type=int, default=0)
     parser.add_argument("--id", type=str, default="baseline")
     parser.add_argument("--algo", type=str, default="PPO")
-    parser.add_argument("--logdir", type=str, default="logs")
+    parser.add_argument("--logdir_primtive", type=str, default="logs")
+    parser.add_argument("--logdir_transfer", type=str, default="logs_transfer")
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--vec_normalise", type=str, default="False")
     parser.add_argument("--checkpoint_freq", type=int, default="500000")
