@@ -1,0 +1,9 @@
+robot_ws_path="$HOME/robot_learn"
+log_primitive_dir="logs_0613_final_only/mcp_dir_list/seed1/models"
+log_transfer_path="logs_0614_transfer"
+id="mcp_transfer_test_00"
+cd $robot_ws_path
+ptrhon_script="train_edit_06_mcp_naive_transfer_dir_list.py"
+python ./DRLoco/drloco/$ptrhon_script --vec_normalise true --id $id --seed 1 --logdir_primitive $log_primitive_dir --logdir_transfer $log_transfer_path 
+
+

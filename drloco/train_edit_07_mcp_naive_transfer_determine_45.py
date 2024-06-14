@@ -58,7 +58,7 @@ def train(args):
     run_id = args.id
     direction = args.direction
     algo = args.algo
-    logdir_primtive = args.logdir_primtive
+    logdir_primitive = args.logdir_primitive
     logdir_transfer = args.logdir_transfer
     seed = args.seed
     vec_normalise = args.vec_normalise == "True" or args.vec_normalise == "true"
@@ -67,7 +67,8 @@ def train(args):
     save_video = args.save_video == "True" or args.save_video == "true"
 
     tag_name = os.path.join(f"{cfgl.ENV_ID}", f"{algo}_{run_id}")
-    log_dir_primtive = os.path.join(logdir_primtive, tag_name, f"seed{str(seed)}")
+    # log_dir_primitive = os.path.join(logdir_primitive, tag_name, f"seed{str(seed)}")
+    log_dir_primitive = os.path.join(logdir_primitive)
     log_dir_transfer = os.path.join(logdir_transfer, tag_name, f"seed{str(seed)}")
     model_dir = os.path.join(log_dir_transfer, "models")
     mon_dir = os.path.join(log_dir_transfer, "gym")
@@ -108,9 +109,9 @@ def train(args):
         eval_env = utils.vec_env(cfgl.ENV_ID, norm_rew=True, num_envs=1)
 
     if vec_normalise:
-        if os.path.exists(os.path.join(log_dir_primtive, "vec_normalize.pkl")):
+        if os.path.exists(os.path.join(log_dir_primitive, "vec_normalize.pkl")):
             print("Found VecNormalize Stats. Using stats")
-            env = VecNormalize.load(os.path.join(log_dir_primtive, "vec_normalize.pkl"), env)
+            env = VecNormalize.load(os.path.join(log_dir_primitive, "vec_normalize.pkl"), env)
         else:
             print("No previous stats found. Using new VecNormalize instance.")
             env = VecNormalize(env)
@@ -215,14 +216,14 @@ def train(args):
     callback_input_array.append(checkpoint_callback)
     
     if(save_video):
-        save_video_callback = SaveVideoCallback_custom(eval_env, int(eval_freq // cfg.n_envs), vec_normalise, log_dir, 2)
+        save_video_callback = SaveVideoCallback_custom(eval_env, int(eval_freq // cfg.n_envs), vec_normalise, log_dir_transfer, 2)
         callback_input_array.append(save_video_callback)
     # callbackList = CallbackList([checkpoint_callback, save_video_callback])
     # callback_input_array.append(TrainingMonitor())# 원래 코드와 save path 차이에 관련된 오류 발생
     callbackList = CallbackList(callback_input_array)
 
     # train model
-    model_path = f"{log_dir_primtive}/final.zip"
+    model_path = f"{log_dir_primitive}/final.zip"
     assert os.path.exists(model_path)
     mcp_model = PPO.load(model_path, env, verbose=1, tensorboard_log=tbdir, seed=seed)
 
@@ -249,7 +250,7 @@ if __name__ == '__main__':
     parser.add_argument("--direction", type=int, default=0)
     parser.add_argument("--id", type=str, default="baseline")
     parser.add_argument("--algo", type=str, default="PPO")
-    parser.add_argument("--logdir_primtive", type=str, default="logs")
+    parser.add_argument("--logdir_primitive", type=str, default="logs")
     parser.add_argument("--logdir_transfer", type=str, default="logs_transfer")
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--vec_normalise", type=str, default="False")
