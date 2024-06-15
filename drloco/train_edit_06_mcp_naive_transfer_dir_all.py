@@ -186,9 +186,9 @@ def train(args):
                 ep_len = len(imgs)
                 print(f"Ep Len: {ep_len}")
                 imgs = np.array(imgs)
-
+                
                 if self.save_path is not None:
-                    fname=os.path.join(self.save_path, "eval_video_{:0>5}_deg_{:0>3}_reward_{:0000.3f}.gif".format(self.n_calls // self.eval_freq, eval_direction, tot_r))
+                    fname=os.path.join(self.save_path, "eval_video_{:0>5}_deg_{:0>3}_reward_{:5.3f}.gif".format(self.n_calls // self.eval_freq, eval_direction, float(tot_r)))
                     fps = 30 if ep_len < 200 else 60
                     utils.write_gif_to_disk(imgs, fname, fps)
 
