@@ -19,5 +19,6 @@ docs/_build/
 
 *.zip
 
-!logs_0615_transfer/*.zip
+!logs_0615_transfer/*/*.zip
+
 
