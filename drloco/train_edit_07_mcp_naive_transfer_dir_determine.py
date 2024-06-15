@@ -159,28 +159,10 @@ def train(args):
     else:
         ppo_kwargs = {}
 
-    model = PPO(
-        MCPNaive,
-        env,
-        verbose=1,
-        policy_kwargs=policy_kwargs,
-        tensorboard_log=tbdir,
-        seed=seed,
-        **ppo_kwargs,
-    )
-
     # print model path and modification parameters
     # utils.log('RUN DESCRIPTION: \n' + cfgl.WB_RUN_DESCRIPTION)
     utils.log('Training started',
               ['Model: ' + model_dir, 'Modifications: ' + cfg.modification])
-
-    # save model and weights before training
-    if not cfgl.DEBUG:
-    #     utils.save_model(model, model_dir, INIT_CHECKPOINT_SUFFIX)
-        model_init_dir = os.path.join(model_dir, INIT_CHECKPOINT_SUFFIX)
-        os.makedirs(model_init_dir, exist_ok=True)
-        model.save(model_init_dir)
-
 
     np.seterr(divide='raise')
 
@@ -231,20 +213,26 @@ def train(args):
     model_path = f"{log_dir_primitive}/final.zip"
     assert os.path.exists(model_path)
     mcp_model = PPO.load(model_path, env, verbose=1, tensorboard_log=tbdir, seed=seed)
+    # save model and weights before training
+    if not cfgl.DEBUG:
+    #     utils.save_model(model, model_dir, INIT_CHECKPOINT_SUFFIX)
+        model_init_dir = os.path.join(model_dir, INIT_CHECKPOINT_SUFFIX)
+        os.makedirs(model_init_dir, exist_ok=True)
+        mcp_model.save(model_init_dir)
 
     mcp_model.policy.freeze_primitives()
 
-    model.learn(total_timesteps=training_timesteps, callback=callbackList)
+    mcp_model.learn(total_timesteps=training_timesteps, callback=callbackList)
 
     # save model after training
     # utils.save_model(model, checkpoint_dir, FINAL_CHECKPOINT_SUFFIX)
     model_init_dir = os.path.join(model_dir, FINAL_CHECKPOINT_SUFFIX)
     os.makedirs(model_init_dir, exist_ok=True)
-    model.save(model_init_dir)
+    mcp_model.save(model_init_dir)
 
     # close environment
     env.close()
-
+    eval_env.close()
     # evaluate the trained model
     # eval.eval_model()
 
@@ -260,7 +248,7 @@ if __name__ == '__main__':
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--vec_normalise", type=str, default="False")
     parser.add_argument("--checkpoint_freq", type=int, default="250000")
-    parser.add_argument("--eval_freq", type=int, default="1000000")
+    parser.add_argument("--eval_freq", type=int, default="100000")
     parser.add_argument("--save_video", type=str, default="True")
     args = parser.parse_args()
 
