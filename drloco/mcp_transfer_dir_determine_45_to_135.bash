@@ -1,7 +1,7 @@
 #$1 첫번째 파라미터를 의미
 
 robot_ws_path="$HOME/robot_learn"
-log_primitive_dir="logs_0613_final_only/mcp_dir_determine_45/seed1/models"
+log_primitive_dir="DRLoco/logs_0613_final_only/mcp_dir_determine_45/seed1/models"
 log_transfer_dir="DRLoco/logs_$1"
 id="mcp_transfer_dir_determine_45_to_135"
 cd $robot_ws_path

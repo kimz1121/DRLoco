@@ -211,6 +211,9 @@ def train(args):
 
     # train model
     model_path = f"{log_dir_primitive}/final.zip"
+    print(log_dir_primitive)
+    print("os.path.exists(log_dir_primitive) : {}".format(os.path.exists(log_dir_primitive)))
+    print("os.path.exists(model_path) : {}".format(os.path.exists(model_path)))
     assert os.path.exists(model_path)
     mcp_model = PPO.load(model_path, env, verbose=1, tensorboard_log=tbdir, seed=seed)
     # save model and weights before training
@@ -248,7 +251,7 @@ if __name__ == '__main__':
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--vec_normalise", type=str, default="False")
     parser.add_argument("--checkpoint_freq", type=int, default="250000")
-    parser.add_argument("--eval_freq", type=int, default="100000")
+    parser.add_argument("--eval_freq", type=int, default="500000")
     parser.add_argument("--save_video", type=str, default="True")
     args = parser.parse_args()
 
