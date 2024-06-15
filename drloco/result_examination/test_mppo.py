@@ -31,7 +31,7 @@ eval_env = make_vec_env(ant_env.GoalAnt, n_envs=1, env_kwargs={'direction': dire
 # 차후 다시 학습한 것으로 수정하기
 model_path = f'logs_0615_transfer_01/NewRandomGoalAnt-v2/{run_id}/seed0/models/NewRandomGoalAnt-v2/{run_id}_{checkpoint}_steps.zip'
 model = PPO.load(model_path, env=eval_env)
-save_path = "evaluation_{}".format(run_id)
+save_path = "evaluation_data/{}_{}".format(run_id, checkpoint)
 os.makedirs(save_path, exist_ok=True)
 
 obs = eval_env.reset()
