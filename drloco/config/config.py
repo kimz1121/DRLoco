@@ -7,7 +7,7 @@ DEBUG = False
 # when debugging, stop training early after a few steps
 MAX_DEBUG_STEPS = int(2e4)
 # determine if PyTorch should use CPU or GPU
-USE_CPU = True
+USE_CPU = False
 
 # -----------------------------
 # Simulation Environment

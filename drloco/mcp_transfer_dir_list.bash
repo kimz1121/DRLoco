@@ -7,6 +7,6 @@ id="mcp_transfer_dir_list_to_all_00"
 cd $robot_ws_path
 ptrhon_script="train_edit_06_mcp_naive_transfer_dir_all.py"
 echo "now running $ptrhon_script"
-python ./DRLoco/drloco/$ptrhon_script --vec_normalise true --id $id --seed 0 --logdir_primitive $log_primitive_dir --logdir_transfer $log_transfer_path 
+python ./DRLoco/drloco/$ptrhon_script --vec_normalise true --id $id --seed 0 --logdir_primitive $log_primitive_dir --logdir_transfer $log_transfer_dir 
 
 

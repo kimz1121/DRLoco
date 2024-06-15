@@ -1,6 +1,8 @@
+#$1 첫번째 파라미터를 의미
+
 robot_ws_path="$HOME/robot_learn"
 log_primitive_dir="logs_0613_final_only/mcp_dir_determine_45/seed1/models"
-log_transfer_dir="DRLoco/logs_0614_transfer"
+log_transfer_dir="DRLoco/logs_$1"
 id="mcp_transfer_dir_determine_45_to_225"
 cd $robot_ws_path
 ptrhon_script="train_edit_07_mcp_naive_transfer_dir_determine.py"
