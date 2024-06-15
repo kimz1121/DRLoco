@@ -188,7 +188,7 @@ def train(args):
                 imgs = np.array(imgs)
 
                 if self.save_path is not None:
-                    fname=os.path.join(self.save_path, "eval_video_{:0>5}_deg_{:0>3}.gif".format(self.n_calls // self.eval_freq, eval_direction))
+                    fname=os.path.join(self.save_path, "eval_video_{:0>5}_deg_{:0>3}_reward_{:0000.3f}.gif".format(self.n_calls // self.eval_freq, eval_direction, tot_r))
                     fps = 30 if ep_len < 200 else 60
                     utils.write_gif_to_disk(imgs, fname, fps)
 
@@ -247,7 +247,7 @@ if __name__ == '__main__':
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--vec_normalise", type=str, default="False")
     parser.add_argument("--checkpoint_freq", type=int, default="250000")
-    parser.add_argument("--eval_freq", type=int, default="500000")
+    parser.add_argument("--eval_freq", type=int, default="100000")
     parser.add_argument("--save_video", type=str, default="True")
     args = parser.parse_args()
 

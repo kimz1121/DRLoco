@@ -2,6 +2,7 @@ import sys
 import os
 sys.path.append(os.getcwd())
 
+import random
 import numpy as np
 from tqdm import tqdm
 from drloco.mujoco import ant_env
@@ -10,11 +11,16 @@ import sys
 from drloco.common import utils
 from stable_baselines3 import PPO
 from stable_baselines3.common.env_util import make_vec_env
+from stable_baselines3.common.vec_env import VecCheckNan, VecNormalize
+
 import argparse
 import matplotlib.pyplot as plt
 
 
+from drloco.common.utils import load_env
 from drloco.custom.policies_mcp import MCPNaive, MPPO
+
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--direction", type=int)
@@ -27,14 +33,28 @@ direction = args.direction
 run_id = args.id
 checkpoint = args.checkpoint
 save_gif = True
-eval_env = make_vec_env(ant_env.GoalAnt, n_envs=1, env_kwargs={'direction': 0})
+
+if direction is None:
+    direction = random.randint(0, 360)
+    eval_env = make_vec_env(ant_env.RandomGoalAnt, n_envs=1, env_kwargs={'direction_range': None, 'direction_list': [direction]})
+else:
+    eval_env = make_vec_env(ant_env.RandomGoalAnt, n_envs=1, env_kwargs={'direction_range': None, 'direction_list': [direction]})
+
+eval_env = VecNormalize(eval_env)
+eval_env = VecCheckNan(eval_env, raise_exception=True)
+
+# eval_env = ant_env.RandomGoalAnt(direction)
 # 차후 다시 학습한 것으로 수정하기
 model_path = f'logs_0615_transfer_01/NewRandomGoalAnt-v2/{run_id}/seed0/models/NewRandomGoalAnt-v2/{run_id}_{checkpoint}_steps.zip'
+# model_path = f'logs_0615_transfer/NewRandomGoalAnt-v2/{run_id}/seed0/models/final.zip'
+
 model = PPO.load(model_path, env=eval_env)
-save_path = "evaluation_data/{}_{}_dir_{}".format(run_id, checkpoint, direction)
+save_path = "evaluation_data/{}_{}".format(run_id, checkpoint)
 os.makedirs(save_path, exist_ok=True)
 
 obs = eval_env.reset()
+print("----------------------------")
+print(obs)
 img = eval_env.render("rgb_array")
 imgs = [img]
 done = False
@@ -42,77 +62,25 @@ tot_r = 0.0
 weights=[]
 print(f"Begin Evaluation")
 ep_max_len = 1000
+pbar = tqdm(total=ep_max_len)
 
-
-# ! Cardinal Direction Heading
-# dirs = np.array([0, 45, 90, 135, 180, 225, 270, 315])
-# dirs = np.array([0, 90, 180, 270])
-# dirs = dirs[..., None]
-# dirs = np.repeat(dirs, ep_max_len/dirs.shape[0], 1)
-# dirs = dirs.flatten()
-# print(dirs)
-# ! S Shape Heading
-# dirs = np.concatenate((np.linspace(0, 180, ep_max_len // 2), np.linspace(180, 0, ep_max_len // 2)))
-# dirs = np.round(dirs, 1)
-if direction is None:
-    for i in range(9):
-        i = 0
-        done = False
-        direction = np.random.randint(0, 360)
-        pbar = tqdm(total=ep_max_len)
-        while not done:
-            eval_env.envs[0].set_direction(direction)
-            action, _ = model.predict(obs, deterministic=True)
-            weight = model.policy.predict_weights(obs)
-            weights.append(weight)
-            obs, reward, done, info = eval_env.step(action)
-            # img = eval_env.render("rgb_array")
-            # imgs.append(img)
-            tot_r += reward
-            pbar.update(1)
-            i+= 1
-            if i > ep_max_len - 1:
-                done = True
-        pbar.close()
-
-    i = 0
-    done = False
-    direction = np.random.randint(0, 360)
-    pbar = tqdm(total=ep_max_len)
-    while not done:
-        eval_env.envs[0].set_direction(direction)
-        action, _ = model.predict(obs, deterministic=True)
-        weight = model.policy.predict_weights(obs)
-        weights.append(weight)
-        obs, reward, done, info = eval_env.step(action)
-        img = eval_env.render("rgb_array")
-        imgs.append(img)
-        tot_r += reward
-        pbar.update(1)
-        i+= 1
-        if i > ep_max_len - 1:
-            done = True
-    pbar.close()
-    tot_r = tot_r/10
-else:
-    i = 0
-    done = False
-    pbar = tqdm(total=ep_max_len)
-    while not done:
-        eval_env.envs[0].set_direction(direction)
-        action, _ = model.predict(obs, deterministic=True)
-        weight = model.policy.predict_weights(obs)
-        weights.append(weight)
-        obs, reward, done, info = eval_env.step(action)
-        img = eval_env.render("rgb_array")
-        imgs.append(img)
-        tot_r += reward
-        pbar.update(1)
-        i+= 1
-        if i > ep_max_len - 1:
-            done = True
-
-    pbar.close()
+i = 0
+while not done:
+    # eval_env.envs[0].set_direction(direction)
+    action, _ = model.predict(obs, deterministic=True)
+    weight = model.policy.predict_weights(obs)
+    weights.append(weight)
+    obs, reward, done, info = eval_env.step(action)
+    img = eval_env.render("rgb_array")
+    imgs.append(img)
+    tot_r += reward
+    pbar.update(1)
+    i+= 1
+    if i > ep_max_len - 1:
+        done = True
+print("----------------------------")
+print(obs)
+pbar.close()
 
 print(f"Evaluation Reward: {tot_r}")
 weights = np.array(weights).squeeze(1)
